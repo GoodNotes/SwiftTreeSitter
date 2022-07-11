@@ -95,3 +95,31 @@ extension Tree {
         }
     }
 }
+
+extension Tree {
+    public func symbol(for type: String, isNamed: Bool = true) -> TSSymbol? {
+        let value = ts_language_symbol_for_name(
+            ts_tree_language(internalTree),
+            type.cString(using: .utf8),
+            UInt32(type.count),
+            isNamed
+        )
+        return value > 0 ? value : nil
+    }
+    
+    public func getNodes(withSymbol symbol: TSSymbol) -> [Node] {
+        guard let node = rootNode else { return [] }
+
+        return getDeepNodes(node, symbol)
+    }
+    
+    private func getDeepNodes(_ node: Node, _ symbol: TSSymbol) -> [Node] {
+        if node.symbol == symbol { return [node] }
+        
+        var nodes: [Node] = []
+        node.enumerateChildren { child in
+            nodes += getDeepNodes(child, symbol)
+        }
+        return nodes
+    }
+}
